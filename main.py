@@ -88,5 +88,3 @@ while True:
             f"⚠️ Напишите сюда чтобы получить приз в течение 30 минут:\n"
             f"@tgstorc"
         )
-
-Commit changes
