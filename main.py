@@ -35,7 +35,7 @@ while True:
     # Для 5–7 часов:
     # random.randint(18000, 25200)
 
-    wait = random.randint(5, 10)
+    wait = random.randint(18000, 25200)
     time.sleep(wait)
 
     # Получаем последние сообщения
