@@ -29,62 +29,69 @@ def get_updates(offset):
     return r.json()
 
 
+last_user = None
+last_name = None
+
 while True:
 
-    # Ждём 5–10 секунд (для теста)
-    # Для 5–7 часов:
-    # random.randint(18000, 25200)
+    try:
 
-    wait = random.randint(18000, 25200)
-    time.sleep(wait)
+        # Получаем новые сообщения
+        data = get_updates(offset)
 
-    # Получаем последние сообщения
-    data = get_updates(offset)
+        if data.get("ok"):
 
-    last_user = None
-    last_name = None
+            for update in data.get("result", []):
 
-    if data.get("ok"):
+                offset = update["update_id"] + 1
 
-        for update in data.get("result", []):
+                if "message" not in update:
+                    continue
 
-            offset = update["update_id"] + 1
+                msg = update["message"]
 
-            if "message" not in update:
-                continue
+                # Только нужный чат
+                if msg.get("chat", {}).get("id") != CHAT_ID:
+                    continue
 
-            msg = update["message"]
+                user = msg.get("from")
 
-            # Проверяем чат
-            if msg.get("chat", {}).get("id") != CHAT_ID:
-                continue
+                if not user:
+                    continue
 
-            user = msg.get("from")
+                # Игнорируем ботов
+                if user.get("is_bot"):
+                    continue
 
-            if not user:
-                continue
+                # Запоминаем последнего человека
+                last_user = user["id"]
+                last_name = user.get("first_name", "User")
 
-            # Игнорируем ботов
-            if user.get("is_bot"):
-                continue
+        # Ждём 5–7 часов
+        wait = random.randint(18000, 25200)
+        time.sleep(wait)
 
-            # Сохраняем последнего человека
-            last_user = user["id"]
-            last_name = user.get("first_name", "User")
+        # Отправляем победителя
+        if last_user:
 
-    # Если нашли человека
-    if last_user:
+            gift = random.choice([
+                "🧸 Мишка",
+                "💖 Сердце"
+            ])
 
-        gift = random.choice([
-            "🧸 Мишка",
-            "💖 Сердце"
-        ])
+            send(
+                f"🎁 ДРОП ЗАВЕРШЁН!\n\n"
+                f"🏆 Победитель:\n"
+                f"<a href='tg://user?id={last_user}'>{last_name}</a>\n\n"
+                f"🎁 Приз: {gift}\n\n"
+                f"⚠️ Напишите сюда чтобы получить приз в течение 30 минут:\n"
+                f"@tgstorc"
+            )
 
-        send(
-            f"🎁 ДРОП ЗАВЕРШЁН!\n\n"
-            f"🏆 Победитель:\n"
-            f"<a href='tg://user?id={last_user}'>{last_name}</a>\n\n"
-            f"🎁 Приз: {gift}\n\n"
-            f"⚠️ Напишите сюда чтобы получить приз в течение 30 минут:\n"
-            f"@tgstorc"
-        )
+            # Сбрасываем
+            last_user = None
+            last_name = None
+
+    except Exception as e:
+        print(e)
+        time.sleep(10)
