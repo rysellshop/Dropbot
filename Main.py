@@ -4,7 +4,7 @@ import requests
 import os
 
 # Railway Variables
-TOKEN = os.getenv("8753029904:AAFeLa-DNdvJ62Yk6pAnL6QzRHLwoOWVhJ8")
+TOKEN = os.getenv"8753029904:AAFeLa-DNdvJ62Yk6pAnL6QzRHLwoOWVhJ8"
 
 # ID группы
 CHAT_ID = -1003974427872
