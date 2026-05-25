@@ -5,7 +5,12 @@ import requests
 TOKEN = "8753029904:AAGQ-3SVKBOeSSNVePevtjw1fFu0P4o8Ra4"
 CHAT_ID = -1003974427872
 
+last_user = None
+last_name = None
 offset = None
+
+# время следующего дропа
+next_drop = time.time() + random.randint(18000, 25200)
 
 
 def send(text):
@@ -21,62 +26,38 @@ def send(text):
 def get_updates(offset):
     url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
 
-    r = requests.get(url, params={
-        "timeout": 30,
+    return requests.get(url, params={
+        "timeout": 10,
         "offset": offset
-    })
+    }).json()
 
-    return r.json()
-
-
-last_user = None
-last_name = None
 
 while True:
 
-    try:
+    data = get_updates(offset)
 
-        # Получаем новые сообщения
-        data = get_updates(offset)
+    if data.get("ok"):
 
-        if data.get("ok"):
+        for update in data.get("result", []):
 
-            for update in data.get("result", []):
+            offset = update["update_id"] + 1
 
-                offset = update["update_id"] + 1
-
-                if "message" not in update:
-                    continue
+            if "message" in update:
 
                 msg = update["message"]
 
-                # Только нужный чат
-                if msg.get("chat", {}).get("id") != CHAT_ID:
-                    continue
+                if "from" in msg:
+                    last_user = msg["from"]["id"]
+                    last_name = msg["from"]["first_name"]
 
-                user = msg.get("from")
+    # проверка времени дропа
+    if time.time() >= next_drop:
 
-                if not user:
-                    continue
-
-                # Игнорируем ботов
-                if user.get("is_bot"):
-                    continue
-
-                # Запоминаем последнего человека
-                last_user = user["id"]
-                last_name = user.get("first_name", "User")
-
-        # Ждём 5–7 часов
-        wait = random.randint(18000, 25200)
-        time.sleep(wait)
-
-        # Отправляем победителя
         if last_user:
 
             gift = random.choice([
                 "🧸 Мишка",
-                "💖 Сердце"
+                "💖 Любовь"
             ])
 
             send(
@@ -88,10 +69,11 @@ while True:
                 f"@tgstorc"
             )
 
-            # Сбрасываем
+            # сброс победителя
             last_user = None
             last_name = None
 
-    except Exception as e:
-        print(e)
-        time.sleep(10)
+        # новый таймер 5–7 часов
+        next_drop = time.time() + random.randint(18000, 25200)
+
+    time.sleep(5)
